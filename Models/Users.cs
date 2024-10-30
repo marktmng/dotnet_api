@@ -1,6 +1,6 @@
 namespace DotnetAPI
 {
-    public partial class Users
+    public partial class User
     {
         public int UserId { get; set; }
         public string FirstName { get; set; }
@@ -10,7 +10,7 @@ namespace DotnetAPI
         public bool Active { get; set; }
 
         // construc
-        public Users()
+        public User()
         {
             // if first name is null, set it to an empty string.
             if (FirstName == null)
