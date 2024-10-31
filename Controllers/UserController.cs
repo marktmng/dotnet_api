@@ -65,4 +65,53 @@ public class UserController : ControllerBase // created endpoint user before con
         User user = _dapper.LoadDataSingle<User>(sql);
         return user;
     }
+
+    [HttpPut("EditUser")] // endpoint to edit user
+    public IActionResult EditUser(User user)
+    {
+        string sql = @"
+        UPDATE TutorialAppSchema.Users
+            SET [FirstName] = '" + user.FirstName +
+            "', [LastName] = '" + user.LastName +
+            "',[Email] = '" + user.Email +
+            "', [Gender] = '" + user.Gender +
+            "', [Active] = '" + user.Active + // add singl ''
+            "' WHERE UserId = " + user.UserId; // put some space befor WHERE
+
+        Console.WriteLine(sql); // print sql to check error
+
+        if (_dapper.ExecuteSql(sql))
+        {
+            return Ok();
+        }
+
+        throw new Exception("Failed to update user");
+    }
+
+    [HttpPost("AddUser")] // endpoint to add user
+    public IActionResult AddUser(User user)
+    {
+        string sql = @"INSERT INTO TutorialAppSchema.Users(
+                [FirstName],
+                [LastName],
+                [Email],
+                [Gender],
+                [Active] 
+            ) VALUES (
+            '" + user.FirstName +
+            "', '" + user.LastName +
+            "', '" + user.Email +
+            "', '" + user.Gender +
+            "', '" + user.Active +
+            "')";
+
+        Console.WriteLine(sql); // print sql to check error
+
+        if (_dapper.ExecuteSql(sql))
+        {
+            return Ok();
+        }
+
+        throw new Exception("Failed to add user");
+    }
 }
