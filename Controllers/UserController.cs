@@ -1,7 +1,9 @@
 using DotnetAPI;
+using DotnetAPI.Dtos;
+using DotnetAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Dotnet_API.Controllers;
+namespace DotnetAPI.Controllers;
 
 [ApiController] // api controller that gives access to api
 [Route("[controller]")] // route
@@ -13,8 +15,8 @@ public class UserController : ControllerBase // created endpoint user before con
 
     public UserController(IConfiguration config)
     {
-        _dapper = new DataContextDapper(config);
         // Console.WriteLine(configuration.GetConnectionString("DefaultConnection")); // get connection string
+        _dapper = new DataContextDapper(config);
     }
 
     [HttpGet("TestConnection")] // get method
@@ -75,21 +77,22 @@ public class UserController : ControllerBase // created endpoint user before con
             "', [LastName] = '" + user.LastName +
             "',[Email] = '" + user.Email +
             "', [Gender] = '" + user.Gender +
-            "', [Active] = '" + user.Active + // add singl ''
+            "', [Active] = '" + user.Active + // add single ''
             "' WHERE UserId = " + user.UserId; // put some space befor WHERE
 
         Console.WriteLine(sql); // print sql to check error
+
 
         if (_dapper.ExecuteSql(sql))
         {
             return Ok();
         }
 
-        throw new Exception("Failed to update user");
+        throw new Exception("Failed to update user"); // exception
     }
 
     [HttpPost("AddUser")] // endpoint to add user
-    public IActionResult AddUser(User user)
+    public IActionResult AddUser(UserToAddDto user)
     {
         string sql = @"INSERT INTO TutorialAppSchema.Users(
                 [FirstName],
@@ -112,6 +115,23 @@ public class UserController : ControllerBase // created endpoint user before con
             return Ok();
         }
 
-        throw new Exception("Failed to add user");
+        throw new Exception("Failed to add user"); // exception
+    }
+
+    [HttpDelete("DeleteUser/{UserId}")] // endpoint to delete user
+    public IActionResult DeleteUser(int UserId)
+    {
+        string sql = @"
+        DELETE FROM TutorialAppSchema.Users WHERE UserId = " + UserId.ToString();
+
+        Console.WriteLine(sql); // print sql to check error
+
+        if (_dapper.ExecuteSql(sql))
+        {
+            return Ok();
+        }
+
+        throw new Exception("Failed to delete user"); // exception
+
     }
 }

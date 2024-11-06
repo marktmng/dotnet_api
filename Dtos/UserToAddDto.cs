@@ -1,8 +1,7 @@
-namespace DotnetAPI.Models
+namespace DotnetAPI.Dtos
 {
-    public partial class User
+    public partial class UserToAddDto // transfered from User
     {
-        public int UserId { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }
@@ -10,7 +9,7 @@ namespace DotnetAPI.Models
         public bool Active { get; set; }
 
         // construc
-        public User()
+        public UserToAddDto()
         {
             // if first name is null, set it to an empty string.
             if (FirstName == null)
