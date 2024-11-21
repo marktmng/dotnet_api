@@ -74,9 +74,9 @@ public class UserEFController : ControllerBase // created endpoint user before c
                 return Ok();
             }
 
-            throw new Exception("Failed to update user"); // exception
+            // throw new Exception("Failed to update user"); // exception
         }
-        throw new Exception("User not found");
+        throw new Exception("Failed to update user"); // exception
     }
 
     [HttpPost("AddUser")] // endpoint to add user
@@ -115,9 +115,10 @@ public class UserEFController : ControllerBase // created endpoint user before c
                 return Ok();
             }
 
-            throw new Exception("Failed to delete user"); // exception
+            // throw new Exception("Failed to delete user"); // exception
         }
-        throw new Exception("User not found");
+
+        throw new Exception("Failed to delete user"); // exception
 
     }
 }
