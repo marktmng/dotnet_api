@@ -24,21 +24,21 @@ public class UserEFController : ControllerBase // created endpoint user before c
         ));
     }
 
-    [HttpGet("GetUsers")] // endpoint to get all users
-    public IEnumerable<User> GetUsers() // arguement   || Users[]
+    // [HttpGet("GetUsers")] // endpoint to get all users
+    // public IEnumerable<User> GetUsers() // arguement   || Users[]
 
-    {
-        IEnumerable<User> users = _entityFramework.Users.ToList<User>(); // use entity framework to get List by using DataContextEF
-        return users;
-        // return new string[] { "user1", "user2", "user3" };
-        // string[] responseArray = new string[] {
-        // "test1",
-        // "test2",
-        // "test3",
-        // testValue
-        // };
-        // return responseArray;
-    }
+    // {
+    //     IEnumerable<User> users = _entityFramework.Users.ToList<User>(); // use entity framework to get List by using DataContextEF
+    //     return users;
+    //     // return new string[] { "user1", "user2", "user3" };
+    //     // string[] responseArray = new string[] {
+    //     // "test1",
+    //     // "test2",
+    //     // "test3",
+    //     // testValue
+    //     // };
+    //     // return responseArray;
+    // }
 
     [HttpGet("GetSingleUser/{userId}")] // endpoint for getting single user  || for EF userId instead of UserId
     public User GetSingleUser(int userId) // arguement
@@ -55,6 +55,27 @@ public class UserEFController : ControllerBase // created endpoint user before c
         throw new Exception("User not found");
     }
 
+    [HttpPost("AddUser")] // endpoint to add user
+    public IActionResult AddUser(UserToAddDto user) // to map with dto
+    {
+        // User userDb = new User();
+        User userdb = _mapper
+        .Map<User>(user); // use automapper to map dto to model
+
+        // userDb.FirstName = user.FirstName;
+        // userDb.LastName = user.LastName;
+        // userDb.Email = user.Email;
+        // userDb.Gender = user.Gender;
+        // userDb.Active = user.Active;
+
+        _entityFramework.Add(userdb); // to add user
+        if (_entityFramework.SaveChanges() > 0)
+        {
+            return Ok();
+        }
+
+        throw new Exception("Failed to add user"); // exception
+    }
     [HttpPut("EditUser")] // endpoint to edit user
     public IActionResult EditUser(User user)
     {
@@ -79,38 +100,20 @@ public class UserEFController : ControllerBase // created endpoint user before c
         throw new Exception("Failed to update user"); // exception
     }
 
-    [HttpPost("AddUser")] // endpoint to add user
-    public IActionResult AddUser(UserToAddDto user)
-    {
-        // User userDb = new User();
-        User userdb = _mapper.Map<User>(user); // use automapper to map dto to model
-
-        // userDb.FirstName = user.FirstName;
-        // userDb.LastName = user.LastName;
-        // userDb.Email = user.Email;
-        // userDb.Gender = user.Gender;
-        // userDb.Active = user.Active;
-
-        // _entityFramework.Add(userDb);
-        if (_entityFramework.SaveChanges() > 0)
-        {
-            return Ok();
-        }
-
-        throw new Exception("Failed to add user"); // exception
-    }
 
     [HttpDelete("DeleteUser/{UserId}")] // endpoint to delete user
     public IActionResult DeleteUser(int UserId)
     {
+        // Try to find a user with the given UserId in the database.
+        // The "?" after "User" means that the userDb variable can be null if no user is found.
         User? userDb = _entityFramework.Users
             .Where(u => u.UserId == UserId)
             .FirstOrDefault<User>();
 
-        if (userDb != null)
+        if (userDb != null) // check if the user exists
         {
-            _entityFramework.Remove(userDb);
-            if (_entityFramework.SaveChanges() > 0)
+            _entityFramework.Remove(userDb); // if the user is found remove it
+            if (_entityFramework.SaveChanges() > 0)// Check if the deletion was successful.
             {
                 return Ok();
             }

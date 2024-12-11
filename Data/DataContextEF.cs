@@ -33,14 +33,16 @@ namespace DotnetAPI.Data
             modelBuilder.HasDefaultSchema("TutorialAppSchema"); // for this command <dotnet add package Microsoft.EntityFrameworkCore.Relational --version 0.0.0>\
 
             modelBuilder.Entity<User>()
-                .ToTable("Users", "TutorialAppSchema")
+                .ToTable("Users", "TutorialAppSchema") // table name should be plural and match the db table name with sql
                 .HasKey(u => u.UserId); // set primary key auto
 
             modelBuilder.Entity<UserSalary>()
+                .ToTable("UserSalary", "TutorialAppSchema") // table name should be plural and match the db table name with sql
                 .HasKey(u => u.UserId);
 
 
             modelBuilder.Entity<UserJobInfo>()
+                .ToTable("UserJobInfo", "TutorialAppSchema") // table name should be plural and match the db table name with sql
                 .HasKey(u => u.UserId);
         }
 

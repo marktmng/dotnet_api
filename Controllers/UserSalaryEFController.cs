@@ -1,105 +1,97 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using AutoMapper;
+using DotnetAPI;
 using DotnetAPI.Data;
+using DotnetAPI.Dtos;
 using DotnetAPI.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 
-namespace DotnetAPI.Controllers
+namespace DotnetAPI.Controllers;
+
+[ApiController] // api controller that gives access to api
+[Route("[controller]")] // route
+
+// class created UserController
+public class UserSalaryEFController : ControllerBase // created endpoint user before controller
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class UserSalaryEfController : ControllerBase
+    DataContextEF _entityFramework;
+    IMapper _mapper; // created automaper to map dto to model
+
+    public UserSalaryEFController(IConfiguration config)
     {
-        private readonly DataContextEF _context;
+        // Console.WriteLine(configuration.GetConnectionString("DefaultConnection")); // get connection string
+        _entityFramework = new DataContextEF(config);
+        _mapper = new Mapper(new MapperConfiguration(cfg => cfg.CreateMap<UserSalaryDto, UserSalary>()
+        ));
+    }
 
-        public UserSalaryEfController(DataContextEF context)
+    [HttpGet("GetUserSalary/{userId}")] // endpoint for getting single user  || for EF userId instead of UserId
+    public UserSalary GetSingleUser(int userId) // arguement
+
+    {
+        UserSalary? userSalary = _entityFramework.UserSalaries // Query the database using Entity Framework to find the UserSalary record
+            .Where(u => u.UserId == userId) // where the UserId matches the provided userId.
+            .FirstOrDefault<UserSalary>(); // The result is either the matching UserSalary record or null (because of "?")
+
+        if (userSalary != null)
         {
-            _context = context;
-        }
-
-        // GET: api/UserSalaryEf
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<UserSalary>>> GetUserSalaries()
-        {
-            return await _context.UserSalaries.ToListAsync();
-        }
-
-        // GET: api/UserSalaryEf/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<UserSalary>> GetUserSalary(int id)
-        {
-            var userSalary = await _context.UserSalaries.FindAsync(id);
-
-            if (userSalary == null)
-            {
-                return NotFound();
-            }
-
             return userSalary;
         }
+        throw new Exception("User Salary not found");
+    }
 
-        // POST: api/UserSalaryEf
-        [HttpPost]
-        public async Task<ActionResult<UserSalary>> PostUserSalary(UserSalary userSalary)
+    // add user
+    [HttpPost("PostUserSalary")]
+    public IActionResult PostUserSalary(UserSalaryDto userSalary) // to map with dto
+    {
+        UserSalary userSalarydb = _mapper
+        .Map<UserSalary>(userSalary); // use automapper to map dto to model
+        _entityFramework.Add(userSalarydb); // calling entity framework to add user salary
+
+        if (_entityFramework.SaveChanges() > 0)
         {
-            _context.UserSalaries.Add(userSalary);
-            await _context.SaveChangesAsync();
-
-            // Return a created response with the location of the newly created entity
-            return CreatedAtAction("GetUserSalary", new { id = userSalary.UserId }, userSalary);
+            return Ok();
         }
+        throw new Exception("Falied to add user salary");
+    }
 
-        // PUT: api/UserSalaryEf/{id}
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUserSalary(int id, UserSalary userSalary)
+    // update user salary
+    [HttpPut("UpdateUserSalary")]
+    public IActionResult UpdateUserSalary(UserSalary userSalary)
+    {
+        UserSalary? userSalarydb = _entityFramework.UserSalaries
+            .Where(u => u.UserId == userSalary.UserId)
+            .FirstOrDefault<UserSalary>();
+
+        if (userSalarydb != null)
         {
-            if (id != userSalary.UserId)
-            {
-                return BadRequest();
-            }
+            userSalarydb.Salary = userSalary.Salary;
+            userSalarydb.AvgSalary = userSalary.AvgSalary;
 
-            _context.Entry(userSalary).State = EntityState.Modified;
-
-            try
+            if (_entityFramework.SaveChanges() > 0)
             {
-                await _context.SaveChangesAsync();
+                return Ok();
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserSalaryExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
         }
+        throw new Exception("Failed to update user salary");
+    }
 
-        // DELETE: api/UserSalaryEf/{id}
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUserSalary(int id)
+    // delete user salary
+    [HttpDelete("DeleteUserSalary/{UserId}")] // endpoint to delete user
+    public IActionResult DeleteUserSalary(int UserId)
+    {
+        // try to find the user with the given UserId in the database.
+        UserSalary? userSalarydb = _entityFramework.UserSalaries
+            .Where(u => u.UserId == UserId)
+            .FirstOrDefault<UserSalary>();
+
+        if (userSalarydb != null) // check if the user exists
         {
-            var userSalary = await _context.UserSalaries.FindAsync(id);
-            if (userSalary == null)
+            _entityFramework.Remove(userSalarydb); // if the user is found remove it
+            if (_entityFramework.SaveChanges() > 0)// Check if the deletion was successful.
             {
-                return NotFound();
+                return Ok();
             }
-
-            _context.UserSalaries.Remove(userSalary);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
-
-        private bool UserSalaryExists(int id)
-        {
-            return _context.UserSalaries.Any(e => e.UserId == id);
-        }
+        throw new Exception("Failed to delete user salary");
     }
 }
