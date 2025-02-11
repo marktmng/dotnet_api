@@ -52,4 +52,46 @@ public class UserJobInfoEFController : ControllerBase // created endpoint user b
         throw new Exception();
     }
 
+    // put user job info
+    // [HttpPut("UpdateUserJobInfo")]
+    [HttpPut("UpdateUserJobInfo")]
+    public IActionResult UpdateUserJobInfo(UserJobInfo userJobInfo)
+    {
+        UserJobInfo? userJobInfodb = _entityFramework.UserJobInfos
+            .Where(u => u.UserId == userJobInfo.UserId)
+            .FirstOrDefault<UserJobInfo>();
+
+        if (userJobInfodb != null)
+        {
+            userJobInfodb.JobTitle = userJobInfo.JobTitle;
+            userJobInfodb.Department = userJobInfo.Department;
+
+            if (_entityFramework.SaveChanges() > 0)
+            {
+                return Ok();
+            }
+        }
+        throw new Exception("Failed to update user salary");
+    }
+
+    // delete user Job Info
+    [HttpDelete("DeleteUserJobInfo/{UserId}")] // endpoint to delete user
+    public IActionResult DeleteUserJobInfo(int UserId)
+    {
+        // try to find the user with the given UserId in the database.
+        UserJobInfo? userJobInfodb = _entityFramework.UserJobInfos
+            .Where(u => u.UserId == UserId)
+            .FirstOrDefault<UserJobInfo>();
+
+        if (userJobInfodb != null) // check if the user exists
+        {
+            _entityFramework.Remove(userJobInfodb); // if the user is found remove it
+            if (_entityFramework.SaveChanges() > 0)// Check if the deletion was successful.
+            {
+                return Ok();
+            }
+        }
+        throw new Exception("Failed to delete user salary");
+    }
+
 }
