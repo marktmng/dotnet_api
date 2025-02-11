@@ -3,20 +3,17 @@ namespace DotnetAPI.Dtos
 
     public partial class UserJobInfoDto
     {
+        public int UserId { get; set; }
         public string JobTitle { get; set; }
         public string Department { get; set; }
 
         public UserJobInfoDto()
         {
-            if (JobTitle == null) // if job title is empty set it empty string
-            {
-                JobTitle = string.Empty;
-            }
+            JobTitle ??= ""; // if job title is null, set it to an empty string
+            Department ??= ""; // if department is null, set it to an empty string
 
-            if (Department == null) // if department is empty set it empty string
-            {
-                Department = string.Empty;
-            }
+            // JobTitle ??= string.Empty;
+            // Department ??= string.Empty;
         }
     }
 }

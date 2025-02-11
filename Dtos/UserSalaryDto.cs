@@ -2,7 +2,7 @@ namespace DotnetAPI.Dtos
 {
     public partial class UserSalaryDto
     {
-        // public int UserId { get; set;}
+        public int UserId { get; set;}
         public decimal Salary { get; set; }  // Use decimal or the correct type
         public decimal AvgSalary { get; set; }  // Use decimal or the correct type
 

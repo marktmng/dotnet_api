@@ -19,11 +19,11 @@ public class UserController : ControllerBase // created endpoint user before con
         _dapper = new DataContextDapper(config);
     }
 
-    [HttpGet("TestConnection")] // get method
-    public DateTime TestConnection() // created method
-    {
-        return _dapper.LoadDataSingle<DateTime>("SELECT GETDATE()");
-    }
+    // [HttpGet("TestConnection")] // get method
+    // public DateTime TestConnection() // created method
+    // {
+    //     return _dapper.LoadDataSingle<DateTime>("SELECT GETDATE()");
+    // }
 
     [HttpGet("GetUsers")] // endpoint to get all users
     public IEnumerable<User> GetUsers() // arguement   || Users[]

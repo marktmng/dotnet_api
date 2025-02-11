@@ -37,4 +37,19 @@ public class UserJobInfoEFController : ControllerBase // created endpoint user b
         }
         throw new Exception("User Job Information not found");
     }
+
+    [HttpPost("AddUserJobInfo")] // endpoint to add user
+    public IActionResult AddUserJobInfo(UserJobInfoDto userJobInfo) // to map with dto
+    {
+        UserJobInfo userJobInfodb = _mapper
+        .Map<UserJobInfo>(userJobInfo);
+        _entityFramework.Add(userJobInfodb); // calling entity framework to add user job info
+
+        if (_entityFramework.SaveChanges() > 0)
+        {
+            return Ok();
+        }
+        throw new Exception();
+    }
+
 }
