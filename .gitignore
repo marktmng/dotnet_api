@@ -1,1 +1,13 @@
-"obj/" 
+# Ignore build output
+bin/
+obj/
+
+# Ignore user-specific files
+.vs/
+*.user
+*.suo
+*.cache
+*.sln.ide
+
+# Ignore NuGet packages
+packages/
