@@ -14,10 +14,13 @@ namespace DotnetAPI.Controllers;
 public class UserSalaryEFController : ControllerBase // created endpoint user before controller
 {
     DataContextEF _entityFramework;
+
+    IUserRepository _userRepository;
     IMapper _mapper; // created automaper to map dto to model
 
-    public UserSalaryEFController(IConfiguration config)
+    public UserSalaryEFController(IConfiguration config, IUserRepository userRepository)
     {
+        _userRepository = userRepository;
         // Console.WriteLine(configuration.GetConnectionString("DefaultConnection")); // get connection string
         _entityFramework = new DataContextEF(config);
         _mapper = new Mapper(new MapperConfiguration(cfg => cfg.CreateMap<UserSalaryDto, UserSalary>()
@@ -45,9 +48,9 @@ public class UserSalaryEFController : ControllerBase // created endpoint user be
     {
         UserSalary userSalarydb = _mapper
         .Map<UserSalary>(userSalary); // use automapper to map dto to model
-        _entityFramework.Add(userSalarydb); // calling entity framework to add user salary
 
-        if (_entityFramework.SaveChanges() > 0)
+        _userRepository.AddEntity<UserSalary>(userSalarydb); // calling entity framework to add user salary
+        if (_userRepository.SaveChanges())
         {
             return Ok();
         }
@@ -67,7 +70,7 @@ public class UserSalaryEFController : ControllerBase // created endpoint user be
             userSalarydb.Salary = userSalary.Salary;
             userSalarydb.AvgSalary = userSalary.AvgSalary;
 
-            if (_entityFramework.SaveChanges() > 0)
+            if (_userRepository.SaveChanges())
             {
                 return Ok();
             }
@@ -86,8 +89,8 @@ public class UserSalaryEFController : ControllerBase // created endpoint user be
 
         if (userSalarydb != null) // check if the user exists
         {
-            _entityFramework.Remove(userSalarydb); // if the user is found remove it
-            if (_entityFramework.SaveChanges() > 0)// Check if the deletion was successful.
+            _userRepository.RemoveEntity<UserSalary>(userSalarydb); // if the user is found remove it
+            if (_userRepository.SaveChanges())// Check if the deletion was successful.
             {
                 return Ok();
             }

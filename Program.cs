@@ -1,3 +1,5 @@
+using DotnetAPI.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -26,6 +28,9 @@ builder.Services.AddCors((options) =>
         .AllowCredentials(); // allow credentials
     });
 });
+
+builder.Services.AddScoped<IUserRepository, UserRepository>(); // add builder to access IUserRepository from the Controller
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -1,6 +1,6 @@
 namespace DotnetAPI.Data
 {
-    public class UserRepository
+    public class UserRepository : IUserRepository // connecting to IuserRepository
     {
         DataContextEF _entityFramework; // constructor to inject the dapper
 
@@ -29,7 +29,6 @@ namespace DotnetAPI.Data
 
         }
         // remove entity
-        // public bool AddEntity<T>(T entityToAdd)
         public void RemoveEntity<T>(T entityToAdd) // used void because we are not returning anything
         {
             if (entityToAdd != null)

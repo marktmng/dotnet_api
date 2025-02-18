@@ -14,10 +14,14 @@ namespace DotnetAPI.Controllers;
 public class UserEFController : ControllerBase // created endpoint user before controller
 {
     DataContextEF _entityFramework;
+
+    IUserRepository _userRepository;
     IMapper _mapper; // created automaper to map dto to model
 
-    public UserEFController(IConfiguration config)
+    public UserEFController(IConfiguration config, IUserRepository userRepository)
     {
+
+        _userRepository = userRepository;
         // Console.WriteLine(configuration.GetConnectionString("DefaultConnection")); // get connection string
         _entityFramework = new DataContextEF(config);
         _mapper = new Mapper(new MapperConfiguration(cfg => cfg.CreateMap<UserToAddDto, User>()
@@ -68,8 +72,8 @@ public class UserEFController : ControllerBase // created endpoint user before c
         // userDb.Gender = user.Gender;
         // userDb.Active = user.Active;
 
-        _entityFramework.Add(userdb); // to add user
-        if (_entityFramework.SaveChanges() > 0)
+        _userRepository.AddEntity<User>(userdb); // to add user
+        if (_userRepository.SaveChanges()) // changing "_entityFramework.SaveChanges() > 0" to repository
         {
             return Ok();
         }
@@ -90,7 +94,7 @@ public class UserEFController : ControllerBase // created endpoint user before c
             userDb.Email = user.Email;
             userDb.Gender = user.Gender;
             userDb.Active = user.Active;
-            if (_entityFramework.SaveChanges() > 0)
+            if (_userRepository.SaveChanges()) // changing "_entityFramework.SaveChanges() > 0" to repository
             {
                 return Ok();
             }
@@ -112,8 +116,8 @@ public class UserEFController : ControllerBase // created endpoint user before c
 
         if (userDb != null) // check if the user exists
         {
-            _entityFramework.Remove(userDb); // if the user is found remove it
-            if (_entityFramework.SaveChanges() > 0)// Check if the deletion was successful.
+            _userRepository.RemoveEntity<User>(userDb); // if the user is found remove it
+            if (_userRepository.SaveChanges())// Check if the deletion was successful.
             {
                 return Ok();
             }

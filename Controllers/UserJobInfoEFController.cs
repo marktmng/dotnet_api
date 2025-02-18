@@ -14,10 +14,12 @@ namespace DotnetAPI.Controllers;
 public class UserJobInfoEFController : ControllerBase // created endpoint user before controller
 {
     DataContextEF _entityFramework;
+    IUserRepository _userRepository;
     IMapper _mapper; // created automaper to map dto to model
 
-    public UserJobInfoEFController(IConfiguration config)
+    public UserJobInfoEFController(IConfiguration config, IUserRepository userRepository)
     {
+        _userRepository = userRepository;
         // Console.WriteLine(configuration.GetConnectionString("DefaultConnection")); // get connection string
         _entityFramework = new DataContextEF(config);
         _mapper = new Mapper(new MapperConfiguration(cfg => cfg.CreateMap<UserJobInfoDto, UserJobInfo>()
@@ -43,9 +45,9 @@ public class UserJobInfoEFController : ControllerBase // created endpoint user b
     {
         UserJobInfo userJobInfodb = _mapper
         .Map<UserJobInfo>(userJobInfo);
-        _entityFramework.Add(userJobInfodb); // calling entity framework to add user job info
 
-        if (_entityFramework.SaveChanges() > 0)
+        _userRepository.AddEntity<UserJobInfo>(userJobInfodb); // calling entity framework to add user job info
+        if (_userRepository.SaveChanges())
         {
             return Ok();
         }
@@ -66,7 +68,7 @@ public class UserJobInfoEFController : ControllerBase // created endpoint user b
             userJobInfodb.JobTitle = userJobInfo.JobTitle;
             userJobInfodb.Department = userJobInfo.Department;
 
-            if (_entityFramework.SaveChanges() > 0)
+            if (_userRepository.SaveChanges())
             {
                 return Ok();
             }
@@ -85,8 +87,8 @@ public class UserJobInfoEFController : ControllerBase // created endpoint user b
 
         if (userJobInfodb != null) // check if the user exists
         {
-            _entityFramework.Remove(userJobInfodb); // if the user is found remove it
-            if (_entityFramework.SaveChanges() > 0)// Check if the deletion was successful.
+            _userRepository.RemoveEntity<UserJobInfo>(userJobInfodb); // if the user is found remove it
+            if (_userRepository.SaveChanges())// Check if the deletion was successful.
             {
                 return Ok();
             }
