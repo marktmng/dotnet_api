@@ -13,7 +13,7 @@ namespace DotnetAPI.Controllers;
 // class created UserController
 public class UserEFController : ControllerBase // created endpoint user before controller
 {
-    DataContextEF _entityFramework;
+    // DataContextEF _entityFramework; // decalre entity framework
 
     IUserRepository _userRepository;
     IMapper _mapper; // created automaper to map dto to model
@@ -23,7 +23,7 @@ public class UserEFController : ControllerBase // created endpoint user before c
 
         _userRepository = userRepository;
         // Console.WriteLine(configuration.GetConnectionString("DefaultConnection")); // get connection string
-        _entityFramework = new DataContextEF(config);
+        // _entityFramework = new DataContextEF(config); // set the value of entity framework
         _mapper = new Mapper(new MapperConfiguration(cfg => cfg.CreateMap<UserToAddDto, User>()
         ));
     }
@@ -44,19 +44,51 @@ public class UserEFController : ControllerBase // created endpoint user before c
     //     // return responseArray;
     // }
 
+    [HttpGet("GetUsers")] // endpoint to get all users
+    public IEnumerable<User> GetUsers()
+    {
+        IEnumerable<User> users = _userRepository.GetUsers(); // use entity framework to get List by using DataContextEF
+        return users;
+    }
     [HttpGet("GetSingleUser/{userId}")] // endpoint for getting single user  || for EF userId instead of UserId
     public User GetSingleUser(int userId) // arguement
 
     {
-        User? user = _entityFramework.Users
-            .Where(u => u.UserId == userId)
-            .FirstOrDefault<User>();
+        // User? user = _entityFramework.Users
+        //     .Where(u => u.UserId == userId)
+        //     .FirstOrDefault<User>();
 
-        if (user != null)
+        // if (user != null)
+        // {
+        //     return user;
+        // }
+        // throw new Exception("User not found");
+        return _userRepository.GetSingleUser(userId);
+    }
+
+    [HttpPut("EditUser")] // endpoint to edit user
+    public IActionResult EditUser(User user)
+    {
+        // User? userDb = _entityFramework.Users
+        //     .Where(u => u.UserId == user.UserId)
+        //     .FirstOrDefault<User>();
+        User? userDb = _userRepository.GetSingleUser(user.UserId); // get single user
+
+        if (userDb != null)
         {
-            return user;
+            userDb.FirstName = user.FirstName;
+            userDb.LastName = user.LastName;
+            userDb.Email = user.Email;
+            userDb.Gender = user.Gender;
+            userDb.Active = user.Active;
+            if (_userRepository.SaveChanges()) // changing "_entityFramework.SaveChanges() > 0" to repository
+            {
+                return Ok();
+            }
+
+            // throw new Exception("Failed to update user"); // exception
         }
-        throw new Exception("User not found");
+        throw new Exception("Failed to update user"); // exception
     }
 
     [HttpPost("AddUser")] // endpoint to add user
@@ -80,39 +112,13 @@ public class UserEFController : ControllerBase // created endpoint user before c
 
         throw new Exception("Failed to add user"); // exception
     }
-    [HttpPut("EditUser")] // endpoint to edit user
-    public IActionResult EditUser(User user)
-    {
-        User? userDb = _entityFramework.Users
-            .Where(u => u.UserId == user.UserId)
-            .FirstOrDefault<User>();
-
-        if (userDb != null)
-        {
-            userDb.FirstName = user.FirstName;
-            userDb.LastName = user.LastName;
-            userDb.Email = user.Email;
-            userDb.Gender = user.Gender;
-            userDb.Active = user.Active;
-            if (_userRepository.SaveChanges()) // changing "_entityFramework.SaveChanges() > 0" to repository
-            {
-                return Ok();
-            }
-
-            // throw new Exception("Failed to update user"); // exception
-        }
-        throw new Exception("Failed to update user"); // exception
-    }
-
 
     [HttpDelete("DeleteUser/{UserId}")] // endpoint to delete user
     public IActionResult DeleteUser(int UserId)
     {
         // Try to find a user with the given UserId in the database.
         // The "?" after "User" means that the userDb variable can be null if no user is found.
-        User? userDb = _entityFramework.Users
-            .Where(u => u.UserId == UserId)
-            .FirstOrDefault<User>();
+        User? userDb = _userRepository.GetSingleUser(UserId);
 
         if (userDb != null) // check if the user exists
         {
