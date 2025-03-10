@@ -13,7 +13,7 @@ namespace DotnetAPI.Controllers;
 // class created UserController
 public class UserJobInfoEFController : ControllerBase // created endpoint user before controller
 {
-    DataContextEF _entityFramework;
+    // DataContextEF _entityFramework;
     IUserRepository _userRepository;
     IMapper _mapper; // created automaper to map dto to model
 
@@ -21,7 +21,7 @@ public class UserJobInfoEFController : ControllerBase // created endpoint user b
     {
         _userRepository = userRepository;
         // Console.WriteLine(configuration.GetConnectionString("DefaultConnection")); // get connection string
-        _entityFramework = new DataContextEF(config);
+        // _entityFramework = new DataContextEF(config);
         _mapper = new Mapper(new MapperConfiguration(cfg => cfg.CreateMap<UserJobInfoDto, UserJobInfo>()
         ));
     }
@@ -29,9 +29,7 @@ public class UserJobInfoEFController : ControllerBase // created endpoint user b
     [HttpGet("GetUserJobInfo/{userId}")] // endpoint for getting single user  || for EF userId instead of UserId
     public UserJobInfo GetUserJobInfo(int userId) // arguement
     {
-        UserJobInfo? userJobInfo = _entityFramework.UserJobInfos // query the database using entity framework to find the UserJobInfo record
-            .Where(x => x.UserId == userId) // where the UserId matches the provided userId
-            .FirstOrDefault<UserJobInfo>();
+        UserJobInfo? userJobInfo = _userRepository.GetUserJobInfo(userId);
 
         if (userJobInfo != null)
         {
@@ -57,16 +55,14 @@ public class UserJobInfoEFController : ControllerBase // created endpoint user b
     // put user job info
     // [HttpPut("UpdateUserJobInfo")]
     [HttpPut("UpdateUserJobInfo")]
-    public IActionResult UpdateUserJobInfo(UserJobInfo userJobInfo)
+    public IActionResult UpdateUserJobInfo(UserJobInfo userJobInfoUpdate)
     {
-        UserJobInfo? userJobInfodb = _entityFramework.UserJobInfos
-            .Where(u => u.UserId == userJobInfo.UserId)
-            .FirstOrDefault<UserJobInfo>();
+        UserJobInfo? userJobInfodb = _userRepository.GetUserJobInfo(userJobInfoUpdate.UserId);
 
         if (userJobInfodb != null)
         {
-            userJobInfodb.JobTitle = userJobInfo.JobTitle;
-            userJobInfodb.Department = userJobInfo.Department;
+            userJobInfodb.JobTitle = userJobInfoUpdate.JobTitle;
+            userJobInfodb.Department = userJobInfoUpdate.Department;
 
             if (_userRepository.SaveChanges())
             {
@@ -81,9 +77,7 @@ public class UserJobInfoEFController : ControllerBase // created endpoint user b
     public IActionResult DeleteUserJobInfo(int UserId)
     {
         // try to find the user with the given UserId in the database.
-        UserJobInfo? userJobInfodb = _entityFramework.UserJobInfos
-            .Where(u => u.UserId == UserId)
-            .FirstOrDefault<UserJobInfo>();
+        UserJobInfo? userJobInfodb = _userRepository.GetUserJobInfo(UserId);
 
         if (userJobInfodb != null) // check if the user exists
         {

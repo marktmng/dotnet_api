@@ -13,7 +13,7 @@ namespace DotnetAPI.Controllers;
 // class created UserController
 public class UserSalaryEFController : ControllerBase // created endpoint user before controller
 {
-    DataContextEF _entityFramework;
+    // DataContextEF _entityFramework;
 
     IUserRepository _userRepository;
     IMapper _mapper; // created automaper to map dto to model
@@ -22,24 +22,15 @@ public class UserSalaryEFController : ControllerBase // created endpoint user be
     {
         _userRepository = userRepository;
         // Console.WriteLine(configuration.GetConnectionString("DefaultConnection")); // get connection string
-        _entityFramework = new DataContextEF(config);
+        // _entityFramework = new DataContextEF(config);
         _mapper = new Mapper(new MapperConfiguration(cfg => cfg.CreateMap<UserSalaryDto, UserSalary>()
         ));
     }
 
     [HttpGet("GetUserSalary/{userId}")] // endpoint for getting single user  || for EF userId instead of UserId
-    public UserSalary GetSingleUser(int userId) // arguement
-
+    public UserSalary GetSingleUserSalary(int userId) // arguement
     {
-        UserSalary? userSalary = _entityFramework.UserSalaries // Query the database using Entity Framework to find the UserSalary record
-            .Where(u => u.UserId == userId) // where the UserId matches the provided userId.
-            .FirstOrDefault<UserSalary>(); // The result is either the matching UserSalary record or null (because of "?")
-
-        if (userSalary != null)
-        {
-            return userSalary;
-        }
-        throw new Exception("User Salary not found");
+        return _userRepository.GetUserSalary(userId);
     }
 
     // add user
@@ -59,16 +50,14 @@ public class UserSalaryEFController : ControllerBase // created endpoint user be
 
     // update user salary
     [HttpPut("UpdateUserSalary")]
-    public IActionResult UpdateUserSalary(UserSalary userSalary)
+    public IActionResult UpdateUserSalary(UserSalary userSalaryUpdate)
     {
-        UserSalary? userSalarydb = _entityFramework.UserSalaries
-            .Where(u => u.UserId == userSalary.UserId)
-            .FirstOrDefault<UserSalary>();
+        UserSalary? userSalarydb = _userRepository.GetUserSalary(userSalaryUpdate.UserId);
 
         if (userSalarydb != null)
         {
-            userSalarydb.Salary = userSalary.Salary;
-            userSalarydb.AvgSalary = userSalary.AvgSalary;
+            userSalarydb.Salary = userSalaryUpdate.Salary;
+            userSalarydb.AvgSalary = userSalaryUpdate.AvgSalary;
 
             if (_userRepository.SaveChanges())
             {
@@ -83,9 +72,7 @@ public class UserSalaryEFController : ControllerBase // created endpoint user be
     public IActionResult DeleteUserSalary(int UserId)
     {
         // try to find the user with the given UserId in the database.
-        UserSalary? userSalarydb = _entityFramework.UserSalaries
-            .Where(u => u.UserId == UserId)
-            .FirstOrDefault<UserSalary>();
+        UserSalary? userSalarydb = _userRepository.GetUserSalary(UserId);
 
         if (userSalarydb != null) // check if the user exists
         {
