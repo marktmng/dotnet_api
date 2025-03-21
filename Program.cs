@@ -1,4 +1,7 @@
+using System.Text;
 using DotnetAPI.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +34,31 @@ builder.Services.AddCors((options) =>
 
 builder.Services.AddScoped<IUserRepository, UserRepository>(); // add builder to access IUserRepository from the Controller
 
+string? tokenKeyString = builder.Configuration.GetSection("AppSettings:TokenKey").Value;
+
+// creating authentication token validation parameters
+// pull out token key string
+SymmetricSecurityKey tokenKey = new SymmetricSecurityKey( // symmetric key and passing to new symmetric key 
+    Encoding.UTF8.GetBytes( // and passing to new symmetric key byte array
+        tokenKeyString != null ? tokenKeyString : ""
+        )
+    );
+
+// token validation parameters for application how to use it
+TokenValidationParameters tokenValidationParameters = new TokenValidationParameters()
+{
+    IssuerSigningKey = tokenKey,
+    ValidateIssuer = false,
+    ValidateIssuerSigningKey = false,
+    ValidateAudience = false
+};
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme) // set authentication scheme
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = tokenValidationParameters;
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -48,28 +76,9 @@ else
     app.UseSwaggerUI();
     app.UseHttpsRedirection();  // Uncomment if needed
 }
-
+app.UseAuthentication(); // authentication should be before authorization
 app.UseAuthorization();  // This should be after the CORS and Swagger middlewares
+// app.UseAuthentication();
 app.MapControllers();
 app.Run();
 
-
-// if (app.Environment.IsDevelopment())
-// {
-//     app.UseCors("DevCors"); // CORS should be before Authorization
-//     app.UseSwagger();
-//     app.UseSwaggerUI();
-// }
-// else
-// {
-//     app.UseCors("ProdCors"); // CORS should be before Authorization
-//     app.UseHttpsRedirection(); // Uncomment this if HTTPS redirection is needed
-
-// }
-
-// app.UseAuthorization(); // Make sure this comes after CORS
-
-
-// app.MapControllers();
-
-// app.Run();
