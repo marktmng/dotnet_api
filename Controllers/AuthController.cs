@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using DotnetAPI.Data;
 using DotnetAPI.Dtos;
+using DotnetAPI.Helpers;
 using DotnetAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
@@ -20,12 +21,14 @@ namespace DotnetAPI.Controllers
     public class AuthController : ControllerBase
     {
         private readonly DataContextDapper _dapper;
-        private readonly IConfiguration _config;
+        // private readonly IConfiguration _config;
+        private readonly AuthHelper _authHelper;
 
-        public AuthController(IConfiguration config)
+        public AuthController(IConfiguration config) //  constructor injection with IConfiguration || dependency injection
         {
-            _config = config;
+            // _config = config;
             _dapper = new DataContextDapper(config);
+            _authHelper = new AuthHelper(config);
         }
 
         [AllowAnonymous] // allow anonymous attribute to allow user to register
@@ -46,7 +49,7 @@ namespace DotnetAPI.Controllers
                         rng.GetNonZeroBytes(passwordSalt);
                     }
 
-                    byte[] passwordHash = GetPasswordHash(userForRegistration.Password, passwordSalt);
+                    byte[] passwordHash = _authHelper.GetPasswordHash(userForRegistration.Password, passwordSalt);
 
                     string sqlAddAuth = @"INSERT INTO TutorialAppSchema.Auth ([Email],
                         [PasswordHash],
@@ -104,7 +107,7 @@ namespace DotnetAPI.Controllers
             UserForLoginConfirmationDto userForLoginConfirmation = _dapper
                 .LoadDataSingle<UserForLoginConfirmationDto>(sqlForHashAndSalt);
 
-            byte[] passwordHash = GetPasswordHash(userForLogin.Password, userForLoginConfirmation.PasswordSalt);
+            byte[] passwordHash = _authHelper.GetPasswordHash(userForLogin.Password, userForLoginConfirmation.PasswordSalt);
 
             for (int index = 0; index < passwordHash.Length; index++)
             {
@@ -114,6 +117,18 @@ namespace DotnetAPI.Controllers
                 }
             }
 
+            //                                  or
+
+            // →→→→→
+            // Compare the password hash with the stored hash using SequenceEqual.
+            // SequenceEqual checks if both byte arrays are identical element by element.
+            // If they do not match, return a 401 Unauthorized status with an "Invalid password!" message.
+            // if (!passwordHash.SequenceEqual(userForLoginConfirmation.PasswordHash))
+            // {
+            //     return StatusCode(401, "Invalid password!");
+            // }
+
+
             string userIdSql = @"
         SELECT UserId FROM TutorialAppSchema.Users WHERE Email = '" +
                 userForLogin.Email + "'";
@@ -121,77 +136,23 @@ namespace DotnetAPI.Controllers
             int userId = _dapper.LoadDataSingle<int>(userIdSql);
 
             return Ok(new Dictionary<string, string>{
-                {"token", CreateToken(userId)}
+                {"token", _authHelper.CreateToken(userId)}
             });
         }
 
         // refresh token method
         [HttpGet("RefreshToken")]
-        public IActionResult RefreshToken()
+        public string RefreshToken()
         {
-            string userId = User.FindFirst("userId")?.Value + "";
+            // string userId = User.FindFirst("userId")?.Value + "";
 
             string userIdSql = "SELECT UserId FROM TutorialAppSchema.Users WHERE UserId = " +
-            userId;
+            User.FindFirst("userId")?.Value + "";
 
-            int userIdFromDb = _dapper.LoadDataSingle<int>(userIdSql);
+            int userId = _dapper.LoadDataSingle<int>(userIdSql);
 
-            return Ok(new Dictionary<string, string>{
-                {"token", CreateToken(userIdFromDb)}
-            });
+            return _authHelper.CreateToken(userId);
         }
-        private byte[] GetPasswordHash(string password, byte[] passwordSalt)
-        {
-            string passwordSaltString = _config.GetSection("Appsettings:PasswordKey").Value +
-                        Convert.ToBase64String(passwordSalt);
-
-            return KeyDerivation.Pbkdf2(
-                password: password,
-                salt: Encoding.ASCII.GetBytes(passwordSaltString),
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 10000,
-                numBytesRequested: 256 / 8
-            );
-        }
-
-        private string CreateToken(int userId) // helper method to create token
-        {
-            Claim[] claims = new[]
-            {
-                new Claim("userId", userId.ToString()) // converting userId to string
-            };
-
-            string? tokenKeyString = _config.GetSection("AppSettings:TokenKey").Value;
-
-            // break down to look at each part
-            SymmetricSecurityKey tokenKey = new SymmetricSecurityKey( // symmetric key and passing to new symmetric key 
-                Encoding.UTF8.GetBytes( // and passing to new symmetric key byte array
-                    tokenKeyString != null ? tokenKeyString : ""
-                    )
-                ); // out of our token key from appsettings
-
-            // now we need to create signing credentials
-            SigningCredentials credentials = new SigningCredentials( // signing credentials is uusing our token key
-                tokenKey,
-                SecurityAlgorithms.HmacSha256Signature
-                );
-
-            // now we need to create token descriptor
-            SecurityTokenDescriptor descriptor = new SecurityTokenDescriptor()
-            {
-                Subject = new ClaimsIdentity(claims),
-                SigningCredentials = credentials,
-                Expires = DateTime.Now.AddDays(1)
-            };
-
-            // now we need to create a token handler
-            JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler(); // we need import using Microsoft.IdentityModel.Tokens;
-
-            SecurityToken token = tokenHandler.CreateToken(descriptor); // creating a token and this is our actual token
-
-            return tokenHandler.WriteToken(token); // writing token to make universal
-        }
-
     }
 }
 
