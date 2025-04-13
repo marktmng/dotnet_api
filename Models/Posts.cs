@@ -11,8 +11,8 @@ namespace DotnetAPI.Models
 
         public Post()
         {
-            PostTitle = PostTitle ?? "";
-            PostContent = PostContent ?? "";
+            PostTitle = PostTitle ?? ""; // if post title is null, set it to an empty string.
+            PostContent = PostContent ?? ""; // if post content is null, set it to an empty string.
         }
     }
 }
