@@ -51,36 +51,50 @@ namespace DotnetAPI.Controllers
 
                     byte[] passwordHash = _authHelper.GetPasswordHash(userForRegistration.Password, passwordSalt);
 
-                    string sqlAddAuth = @"INSERT INTO TutorialAppSchema.Auth ([Email],
-                        [PasswordHash],
-                        [PasswordSalt]) VALUES ('" + userForRegistration.Email +
-                        "', @PasswordHash, @PasswordSalt)";
+                    string sqlAddAuth = @"EXEC TutorialAppSchema.spRegistration_Upsert
+                        @Email = @EmailParam, 
+                        @PasswordHash = @PasswordHashParam, 
+                        @PasswordSalt = @PasswordSaltParam";
 
                     List<SqlParameter> sqlParameters = new List<SqlParameter>();
 
-                    SqlParameter passwordSaltParam = new SqlParameter("@PasswordSalt", SqlDbType.VarBinary);
-                    passwordSaltParam.Value = passwordSalt;
+                    SqlParameter emailParam = new SqlParameter("@EmailParam", SqlDbType.VarChar);
+                    emailParam.Value = userForRegistration.Email; // set the value of the parameter
+                    sqlParameters.Add(emailParam);
 
-                    SqlParameter PasswordHashParam = new SqlParameter("@PasswordHash", SqlDbType.VarBinary);
+                    SqlParameter passwordSaltParam = new SqlParameter("@PasswordSaltParam", SqlDbType.VarBinary);
+                    passwordSaltParam.Value = passwordSalt;
+                    sqlParameters.Add(passwordSaltParam);
+
+
+                    SqlParameter PasswordHashParam = new SqlParameter("@PasswordHashParam", SqlDbType.VarBinary);
                     PasswordHashParam.Value = passwordHash;
 
-                    sqlParameters.Add(passwordSaltParam);
                     sqlParameters.Add(PasswordHashParam);
 
                     if (_dapper.ExecuteSqlWithParameters(sqlAddAuth, sqlParameters))
                     {
-                        string sqlAddUser = @"INSERT INTO TutorialAppSchema.Users(
-                                [FirstName],
-                                [LastName],
-                                [Email],
-                                [Gender],
-                                [Active] 
-                            ) VALUES (
-                            '" + userForRegistration.FirstName +
-                            "', '" + userForRegistration.LastName +
-                            "', '" + userForRegistration.Email +
-                            "', '" + userForRegistration.Gender +
-                            "', 1)";
+                        string sqlAddUser = @"EXEC TutorialAppSchema.spUser_Upsert
+                            @FirstName = '" + userForRegistration.FirstName +
+                            "', @LastName = '" + userForRegistration.LastName +
+                            "', @Email = '" + userForRegistration.Email +
+                            "', @Gender = '" + userForRegistration.Gender +
+                            "', @Active = 1" +
+                            ", @JobTitle = '" + userForRegistration.JobTitle +
+                            "', @Department = '" + userForRegistration.Department +
+                            "', @Salary = '" + userForRegistration.Salary + "'";
+                        // string sqlAddUser = @"INSERT INTO TutorialAppSchema.Users(
+                        //         [FirstName],
+                        //         [LastName],
+                        //         [Email],
+                        //         [Gender],
+                        //         [Active] 
+                        //     ) VALUES (
+                        //     '" + userForRegistration.FirstName +
+                        //     "', '" + userForRegistration.LastName +
+                        //     "', '" + userForRegistration.Email +
+                        //     "', '" + userForRegistration.Gender +
+                        //     "', 1)";
                         if (_dapper.ExecuteSql(sqlAddUser))
                         {
                             return Ok();
