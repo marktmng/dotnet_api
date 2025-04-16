@@ -8,6 +8,10 @@ namespace DotnetAPI.Dtos
         public string Email { get; set; }
         public string Password { get; set; }
         public string PasswordConfirm { get; set; }
+        public string JobTitle { get; set; }
+        public string Department { get; set; }
+        public decimal Salary { get; set; }
+
 
         public UserForRegistrationDto()
         {
@@ -18,6 +22,9 @@ namespace DotnetAPI.Dtos
             Email = Email ?? ""; // if email is null then set it to empty string
             Password = Password ?? ""; // if password is null then set it to empty string
             PasswordConfirm = PasswordConfirm ?? ""; // if password confirm is null then set it to empty string
+            JobTitle = JobTitle ?? ""; // if job title is null then set it to empty string
+            Department = Department ?? ""; // if department is null then set it to empty string
         }
     }
 }
+
