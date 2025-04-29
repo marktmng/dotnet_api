@@ -73,9 +73,7 @@ public class UserCompleteController : ControllerBase // created endpoint user be
             "', @JobTitle = '" + user.Active +
             "', @Department = '" + user.Active +
             "', @Salary = '" + user.Active +
-            "', @UserId = " + user.UserId; // put some space befor WHERE
-
-        // Console.WriteLine(sql); // print sql to check error
+            "', @UserId = " + user.UserId;
 
 
         if (_dapper.ExecuteSql(sql))
