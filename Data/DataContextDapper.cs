@@ -37,24 +37,26 @@ namespace DotnetAPI
             return dbConnection.Execute(sql); // returns number
         }
 
-        public bool ExecuteSqlWithParameters(string sql, List<SqlParameter> parameters) // count number of parms affected
+        public bool ExecuteSqlWithParameters(string sql, DynamicParameters parameters) // count number of parms affected || replaced DynamicParameters with List<SqlParameter> parameters
         {
-            SqlCommand commandWithParams = new SqlCommand(sql);
+            IDbConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+            return dbConnection.Execute(sql, parameters) > 0; // <<< pass the sql and parameters to the execute method
+            // SqlCommand commandWithParams = new SqlCommand(sql);
 
-            foreach (SqlParameter parameter in parameters)
-            {
-                commandWithParams.Parameters.Add(parameter);
-            }
+            // foreach (SqlParameter parameter in parameters)
+            // {
+            //     commandWithParams.Parameters.Add(parameter);
+            // }
 
-            SqlConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
-            dbConnection.Open();
+            // SqlConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
+            // dbConnection.Open();
 
-            commandWithParams.Connection = dbConnection;
+            // commandWithParams.Connection = dbConnection;
 
-            int rowsAffected = commandWithParams.ExecuteNonQuery();
-            dbConnection.Close();
+            // int rowsAffected = commandWithParams.ExecuteNonQuery();
+            // dbConnection.Close();
 
-            return rowsAffected > 0;
+            // return rowsAffected > 0;
         }
         public IEnumerable<T> LoadDataWithParameters<T>(string sql, DynamicParameters parameters)
         {
@@ -69,5 +71,3 @@ namespace DotnetAPI
         }
     }
 }
-
-// trying to fix
