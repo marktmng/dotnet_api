@@ -2,23 +2,28 @@ using System.Data;
 using Dapper;
 using DotnetAPI;
 using DotnetAPI.Dtos;
+using DotnetAPI.Helpers;
 using DotnetAPI.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DotnetAPI.Controllers;
-
+[Authorize] // authorize attribute to make sure user is authorized
 [ApiController] // api controller that gives access to api
 [Route("[controller]")] // route
 
 // class created UserController
 public class UserCompleteController : ControllerBase // created endpoint user before controller
 {
-    DataContextDapper _dapper;
+    private readonly DataContextDapper _dapper;
+
+    private readonly ReusableSql _reusableSql; // created reusable declaration
 
     public UserCompleteController(IConfiguration config)
     {
         // Console.WriteLine(configuration.GetConnectionString("DefaultConnection")); // get connection string
         _dapper = new DataContextDapper(config);
+        _reusableSql = new ReusableSql(config); // create instance of reusable sql class
     }
 
     [HttpGet("GetUsers/{UserId}/{isActive}")] // endpoint to get all users
@@ -69,32 +74,8 @@ public class UserCompleteController : ControllerBase // created endpoint user be
     [HttpPut("UpsertUser")] // endpoint to edit user
     public IActionResult UpsertEditUser(UserComplete user)
     {
-
-        string sql = @"EXEC TutorialAppSchema.spUser_Upsert
-            @FirstName = @FirstNameParameter,
-            @LastName = @LastNameParameter, 
-            @Email = @EmailParameter,
-            @Gender = @GenderParameter,
-            @Active = @ActiveParameter,
-            @JobTitle = @JobTitleParameter,
-            @Department = @DepartmentParameter,
-            @Salary = @SalaryParameter,
-            @UserId = @UserIdParameter";
-
-        DynamicParameters sqlParameters = new DynamicParameters();
-
-        sqlParameters.Add("@FirstNameParameter", user.FirstName, DbType.String);
-        sqlParameters.Add("@LastNameParameter", user.LastName, DbType.String);
-        sqlParameters.Add("@EmailParameter", user.Email, DbType.String);
-        sqlParameters.Add("@GenderParameter", user.Gender, DbType.String);
-        sqlParameters.Add("@ActiveParameter", user.Active, DbType.Boolean);
-        sqlParameters.Add("@JobTitleParameter", user.JobTitle, DbType.String);
-        sqlParameters.Add("@DepartmentParameter", user.Department, DbType.String);
-        sqlParameters.Add("@SalaryParameter", user.Salary, DbType.Decimal);
-        sqlParameters.Add("@UserIdParameter", user.UserId, DbType.Int32);
-
-
-        if (_dapper.ExecuteSqlWithParameters(sql, sqlParameters))
+        // all these parameters is inside the ReusableSql class
+        if (_reusableSql.UpsertEditUser(user))
         {
             return Ok();
         }
